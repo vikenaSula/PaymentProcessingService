@@ -1,0 +1,61 @@
+########################################
+# Maven
+########################################
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+
+########################################
+# IntelliJ IDEA
+########################################
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+########################################
+# Java / Spring Boot
+########################################
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+logs/
+
+# Local app properties (optional – uncomment if they contain secrets)
+# src/main/resources/application.properties
+# src/main/resources/application.yml
+
+########################################
+# Windows OS
+########################################
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+########################################
+# System / Temp files
+########################################
+*.tmp
+*.swp
+*.swo
+
+########################################
+# Environment / local DB files
+########################################
+.env
+*.env
+*.h2.db
+*.mv.db
+*.db
