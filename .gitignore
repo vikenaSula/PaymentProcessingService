@@ -32,6 +32,8 @@ out/
 *.log
 logs/
 
+src/main/resources/application-local.properties
+
 # Local app properties (optional – uncomment if they contain secrets)
 # src/main/resources/application.properties
 # src/main/resources/application.yml
@@ -49,6 +51,16 @@ $RECYCLE.BIN/
 ########################################
 *.tmp
 *.swp
+
+########################################
+# Environment / Secrets
+########################################
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
 *.swo
 
 ########################################
