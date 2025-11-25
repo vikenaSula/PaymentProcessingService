@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,7 +86,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should throw exception when idempotency key is null")
     void testInitiatePaymentNullIdempotencyKey() {
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> paymentService.initiatePayment(paymentRequest, null));
 
@@ -96,7 +96,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should throw exception when idempotency key is empty")
     void testInitiatePaymentEmptyIdempotencyKey() {
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> paymentService.initiatePayment(paymentRequest, "   "));
 
@@ -107,15 +106,10 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should return existing transaction for duplicate idempotency key")
     void testInitiatePaymentDuplicateIdempotencyKey() {
-        // Arrange
         when(transactionService.findByIdempotencyKey("idempotency-key-123"))
             .thenReturn(Optional.of(testTransaction));
-
-        // Act
         PaymentInitiationResponse response = paymentService.initiatePayment(
             paymentRequest, "idempotency-key-123");
-
-        // Assert
         assertNotNull(response);
         assertEquals("1", response.getTransactionId());
         assertEquals("TXN-12345678", response.getTransactionReference());
@@ -126,7 +120,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should successfully initiate credit card payment")
     void testInitiatePaymentCreditCardSuccess() throws StripeException {
-        // Arrange
         when(transactionService.findByIdempotencyKey(anyString()))
             .thenReturn(Optional.empty());
         when(transactionService.createTransaction(any(Transaction.class)))
@@ -135,12 +128,8 @@ class PaymentServiceTest {
             .thenReturn(paymentIntent);
         when(transactionService.updateTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
-
-        // Act
         PaymentInitiationResponse response = paymentService.initiatePayment(
             paymentRequest, "idempotency-key-123");
-
-        // Assert
         assertNotNull(response);
         assertEquals("1", response.getTransactionId());
         verify(transactionService).createTransaction(any(Transaction.class));
@@ -151,7 +140,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should successfully initiate bank transfer payment")
     void testInitiatePaymentBankTransferSuccess() throws StripeException {
-        // Arrange
         paymentRequest.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
         paymentRequest.setDetails(bankTransferDetails);
         testTransaction.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
@@ -164,12 +152,8 @@ class PaymentServiceTest {
             .thenReturn(paymentIntent);
         when(transactionService.updateTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
-
-        // Act
         PaymentInitiationResponse response = paymentService.initiatePayment(
             paymentRequest, "idempotency-key-456");
-
-        // Assert
         assertNotNull(response);
         verify(transactionService).createTransaction(any(Transaction.class));
         verify(stripeService).processBankTransferPayment(any(), anyString(), any(), anyString());
@@ -178,21 +162,21 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should handle Stripe exception during credit card payment")
     void testInitiatePaymentCreditCardStripeException() throws StripeException {
-        // Arrange
         when(transactionService.findByIdempotencyKey(anyString()))
             .thenReturn(Optional.empty());
         when(transactionService.createTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
+
+        StripeException stripeException = new StripeException("Card declined", "request-123", "card_declined", 402) {};
         when(stripeService.processCreditCardPayment(any(), anyString(), any(), anyString()))
-            .thenThrow(new StripeException("Card declined", "request-123", "card_declined", 402) {});
+            .thenThrow(stripeException);
+
         when(transactionService.updateTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
 
-        // Act
         PaymentInitiationResponse response = paymentService.initiatePayment(
             paymentRequest, "idempotency-key-789");
 
-        // Assert
         assertNotNull(response);
         verify(transactionService).updateTransaction(any(Transaction.class));
     }
@@ -200,14 +184,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should get payment by ID")
     void testGetPaymentById() {
-        // Arrange
         when(transactionService.findById(1L))
             .thenReturn(Optional.of(testTransaction));
-
-        // Act
         PaymentInitiationResponse response = paymentService.getPaymentById(1L);
-
-        // Assert
         assertNotNull(response);
         assertEquals("1", response.getTransactionId());
         assertEquals("TXN-12345678", response.getTransactionReference());
@@ -217,12 +196,9 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should throw exception when payment not found by ID")
     void testGetPaymentByIdNotFound() {
-        // Arrange
         when(transactionService.findById(999L))
             .thenReturn(Optional.empty());
-
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
             () -> paymentService.getPaymentById(999L));
 
         assertEquals("Payment not found with id: 999", exception.getMessage());
@@ -232,7 +208,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should get all payments without filters")
     void testGetAllPaymentsNoFilters() {
-        // Arrange
         Transaction transaction2 = new Transaction();
         transaction2.setId(2L);
         transaction2.setAmount(new BigDecimal("200.00"));
@@ -246,12 +221,8 @@ class PaymentServiceTest {
 
         List<Transaction> transactions = Arrays.asList(testTransaction, transaction2);
         when(transactionService.findAll()).thenReturn(transactions);
-
-        // Act
         List<PaymentInitiationResponse> responses = paymentService.getAllPayments(
             null, null, null, null, null);
-
-        // Assert
         assertNotNull(responses);
         assertEquals(2, responses.size());
         verify(transactionService).findAll();
@@ -260,7 +231,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should filter payments by status")
     void testGetAllPaymentsFilterByStatus() {
-        // Arrange
         Transaction completedTransaction = new Transaction();
         completedTransaction.setId(2L);
         completedTransaction.setAmount(new BigDecimal("200.00"));
@@ -275,20 +245,17 @@ class PaymentServiceTest {
         List<Transaction> transactions = Arrays.asList(testTransaction, completedTransaction);
         when(transactionService.findAll()).thenReturn(transactions);
 
-        // Act
         List<PaymentInitiationResponse> responses = paymentService.getAllPayments(
             PaymentStatus.COMPLETED, null, null, null, null);
 
-        // Assert
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        assertEquals("COMPLETED", responses.get(0).getStatus());
+        assertEquals("COMPLETED", responses.getFirst().getStatus());
     }
 
     @Test
     @DisplayName("Should filter payments by amount range")
     void testGetAllPaymentsFilterByAmountRange() {
-        // Arrange
         Transaction transaction2 = new Transaction();
         transaction2.setId(2L);
         transaction2.setAmount(new BigDecimal("500.00"));
@@ -302,21 +269,16 @@ class PaymentServiceTest {
 
         List<Transaction> transactions = Arrays.asList(testTransaction, transaction2);
         when(transactionService.findAll()).thenReturn(transactions);
-
-        // Act
         List<PaymentInitiationResponse> responses = paymentService.getAllPayments(
             null, null, null, new BigDecimal("50.00"), new BigDecimal("150.00"));
-
-        // Assert
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        assertEquals(new BigDecimal("100.00"), responses.get(0).getAmount());
+        assertEquals(new BigDecimal("100.00"), responses.getFirst().getAmount());
     }
 
     @Test
     @DisplayName("Should throw exception for invalid start date format")
     void testGetAllPaymentsInvalidStartDate() {
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> paymentService.getAllPayments(null, "invalid-date", null, null, null));
 
@@ -326,7 +288,6 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should throw exception for invalid end date format")
     void testGetAllPaymentsInvalidEndDate() {
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> paymentService.getAllPayments(null, null, "invalid-date", null, null));
 
@@ -336,9 +297,7 @@ class PaymentServiceTest {
     @Test
     @DisplayName("Should filter payments by date range")
     void testGetAllPaymentsFilterByDateRange() {
-        // Arrange
         Instant yesterday = Instant.now().minusSeconds(86400);
-        Instant tomorrow = Instant.now().plusSeconds(86400);
 
         testTransaction.setCreatedAt(Instant.now());
 
@@ -358,11 +317,9 @@ class PaymentServiceTest {
 
         LocalDate today = LocalDate.now();
 
-        // Act
         List<PaymentInitiationResponse> responses = paymentService.getAllPayments(
             null, today.toString(), today.toString(), null, null);
 
-        // Assert
         assertNotNull(responses);
         assertEquals(1, responses.size());
     }

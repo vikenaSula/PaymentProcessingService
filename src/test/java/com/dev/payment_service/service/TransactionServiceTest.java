@@ -55,14 +55,9 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should find transaction by idempotency key")
     void testFindByIdempotencyKey() {
-        // Arrange
         when(transactionRepository.findByIdempotencyKey(anyString()))
             .thenReturn(Optional.of(testTransaction));
-
-        // Act
         Optional<Transaction> result = transactionService.findByIdempotencyKey("idempotency-key-123");
-
-        // Assert
         assertTrue(result.isPresent());
         assertEquals(testTransaction.getId(), result.get().getId());
         assertEquals("idempotency-key-123", result.get().getIdempotencyKey());
@@ -72,14 +67,9 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should return empty when idempotency key not found")
     void testFindByIdempotencyKeyNotFound() {
-        // Arrange
         when(transactionRepository.findByIdempotencyKey(anyString()))
             .thenReturn(Optional.empty());
-
-        // Act
         Optional<Transaction> result = transactionService.findByIdempotencyKey("non-existent");
-
-        // Assert
         assertFalse(result.isPresent());
         verify(transactionRepository).findByIdempotencyKey("non-existent");
     }
@@ -87,14 +77,9 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should find transaction by provider reference ID")
     void testFindByProviderReferenceId() {
-        // Arrange
         when(transactionRepository.findByProviderReferenceId(anyString()))
             .thenReturn(Optional.of(testTransaction));
-
-        // Act
         Optional<Transaction> result = transactionService.findByProviderReferenceId("pi_test123");
-
-        // Assert
         assertTrue(result.isPresent());
         assertEquals("pi_test123", result.get().getProviderReferenceId());
         verify(transactionRepository).findByProviderReferenceId("pi_test123");
@@ -103,14 +88,9 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should find transaction by ID")
     void testFindById() {
-        // Arrange
         when(transactionRepository.findById(anyLong()))
             .thenReturn(Optional.of(testTransaction));
-
-        // Act
         Optional<Transaction> result = transactionService.findById(1L);
-
-        // Assert
         assertTrue(result.isPresent());
         assertEquals(1L, result.get().getId());
         verify(transactionRepository).findById(1L);
@@ -119,7 +99,6 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should find all transactions")
     void testFindAll() {
-        // Arrange
         Transaction transaction2 = new Transaction();
         transaction2.setId(2L);
         transaction2.setAmount(new BigDecimal("200.00"));
@@ -127,11 +106,7 @@ class TransactionServiceTest {
 
         List<Transaction> transactions = Arrays.asList(testTransaction, transaction2);
         when(transactionRepository.findAll()).thenReturn(transactions);
-
-        // Act
         List<Transaction> result = transactionService.findAll();
-
-        // Assert
         assertNotNull(result);
         assertEquals(2, result.size());
         verify(transactionRepository).findAll();
@@ -140,14 +115,9 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should create new transaction")
     void testCreateTransaction() {
-        // Arrange
         when(transactionRepository.save(any(Transaction.class)))
             .thenReturn(testTransaction);
-
-        // Act
         Transaction result = transactionService.createTransaction(testTransaction);
-
-        // Assert
         assertNotNull(result);
         assertEquals(testTransaction.getId(), result.getId());
         assertEquals(testTransaction.getAmount(), result.getAmount());
@@ -157,15 +127,10 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should update existing transaction")
     void testUpdateTransaction() {
-        // Arrange
         testTransaction.setStatus(PaymentStatus.COMPLETED);
         when(transactionRepository.save(any(Transaction.class)))
             .thenReturn(testTransaction);
-
-        // Act
         Transaction result = transactionService.updateTransaction(testTransaction);
-
-        // Assert
         assertNotNull(result);
         assertEquals(PaymentStatus.COMPLETED, result.getStatus());
         assertNotNull(result.getUpdatedAt());
@@ -175,17 +140,12 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should update transaction status")
     void testUpdateTransactionStatus() {
-        // Arrange
         when(transactionRepository.findById(anyLong()))
             .thenReturn(Optional.of(testTransaction));
         when(transactionRepository.save(any(Transaction.class)))
             .thenReturn(testTransaction);
-
-        // Act
         Transaction result = transactionService.updateTransactionStatus(
             1L, PaymentStatus.COMPLETED, "WEBHOOK_STRIPE");
-
-        // Assert
         assertNotNull(result);
         assertEquals(PaymentStatus.COMPLETED, result.getStatus());
         assertEquals("WEBHOOK_STRIPE", result.getLastModifiedBy());
@@ -197,11 +157,8 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should throw exception when updating non-existent transaction status")
     void testUpdateTransactionStatusNotFound() {
-        // Arrange
         when(transactionRepository.findById(anyLong()))
             .thenReturn(Optional.empty());
-
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> transactionService.updateTransactionStatus(999L, PaymentStatus.FAILED, "SYSTEM"));
 
@@ -213,18 +170,15 @@ class TransactionServiceTest {
     @Test
     @DisplayName("Should update transaction status from PENDING to FAILED")
     void testUpdateTransactionStatusToFailed() {
-        // Arrange
         testTransaction.setStatus(PaymentStatus.PENDING);
         when(transactionRepository.findById(anyLong()))
             .thenReturn(Optional.of(testTransaction));
         when(transactionRepository.save(any(Transaction.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
-        // Act
         Transaction result = transactionService.updateTransactionStatus(
             1L, PaymentStatus.FAILED, "WEBHOOK_STRIPE");
 
-        // Assert
         assertEquals(PaymentStatus.FAILED, result.getStatus());
         verify(transactionRepository).save(any(Transaction.class));
     }
