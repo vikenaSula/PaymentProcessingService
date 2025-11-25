@@ -53,11 +53,11 @@ public class Transaction {
     @Column(nullable = false, length = 50)
     private String provider;
 
-    // TODO: Replace with user from Spring Security Authentication principal, nullable = false)
+    // TODO: Replace with user from Spring Security Authentication
     @Column(name = "created_by")
     private String createdBy;
 
-    // TODO: Replace with user from Spring Security Authentication principal
+    // TODO: Replace with user from Spring Security Authentication
     @Column(name = "last_modified_by")
     private String lastModifiedBy;
 
