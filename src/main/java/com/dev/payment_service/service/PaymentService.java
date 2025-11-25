@@ -19,10 +19,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +70,7 @@ public class PaymentService {
 
     public PaymentInitiationResponse getPaymentById(Long id) {
         Transaction transaction = transactionService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Payment not found with id: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Payment not found with id: " + id));
 
         return mapResponse(transaction);
     }
@@ -85,7 +82,6 @@ public class PaymentService {
             BigDecimal minAmount,
             BigDecimal maxAmount) {
 
-        // Parse date strings
         LocalDate startDate = null;
         LocalDate endDate = null;
 

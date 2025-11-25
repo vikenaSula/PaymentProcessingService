@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -165,12 +166,17 @@ class PaymentServiceTest {
             .thenReturn(Optional.empty());
         when(transactionService.createTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
+
+        StripeException stripeException = new StripeException("Card declined", "request-123", "card_declined", 402) {};
         when(stripeService.processCreditCardPayment(any(), anyString(), any(), anyString()))
-            .thenThrow(new StripeException("Card declined", "request-123", "card_declined", 402) {});
+            .thenThrow(stripeException);
+
         when(transactionService.updateTransaction(any(Transaction.class)))
             .thenReturn(testTransaction);
+
         PaymentInitiationResponse response = paymentService.initiatePayment(
             paymentRequest, "idempotency-key-789");
+
         assertNotNull(response);
         verify(transactionService).updateTransaction(any(Transaction.class));
     }
@@ -192,7 +198,7 @@ class PaymentServiceTest {
     void testGetPaymentByIdNotFound() {
         when(transactionService.findById(999L))
             .thenReturn(Optional.empty());
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        NoSuchElementException exception = assertThrows(NoSuchElementException.class,
             () -> paymentService.getPaymentById(999L));
 
         assertEquals("Payment not found with id: 999", exception.getMessage());
@@ -244,7 +250,7 @@ class PaymentServiceTest {
 
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        assertEquals("COMPLETED", responses.get(0).getStatus());
+        assertEquals("COMPLETED", responses.getFirst().getStatus());
     }
 
     @Test
@@ -267,7 +273,7 @@ class PaymentServiceTest {
             null, null, null, new BigDecimal("50.00"), new BigDecimal("150.00"));
         assertNotNull(responses);
         assertEquals(1, responses.size());
-        assertEquals(new BigDecimal("100.00"), responses.get(0).getAmount());
+        assertEquals(new BigDecimal("100.00"), responses.getFirst().getAmount());
     }
 
     @Test
@@ -292,7 +298,6 @@ class PaymentServiceTest {
     @DisplayName("Should filter payments by date range")
     void testGetAllPaymentsFilterByDateRange() {
         Instant yesterday = Instant.now().minusSeconds(86400);
-        Instant tomorrow = Instant.now().plusSeconds(86400);
 
         testTransaction.setCreatedAt(Instant.now());
 
