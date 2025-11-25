@@ -55,10 +55,7 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should throw exception when payment method ID is null")
     void testProcessCreditCardPaymentNullPaymentMethodId() {
-        // Arrange
         creditCardDetails.setPaymentMethodId(null);
-
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> stripeService.processCreditCardPayment(
                 new BigDecimal("100.00"),
@@ -73,10 +70,7 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should throw exception when payment method ID is empty")
     void testProcessCreditCardPaymentEmptyPaymentMethodId() {
-        // Arrange
         creditCardDetails.setPaymentMethodId("");
-
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> stripeService.processCreditCardPayment(
                 new BigDecimal("100.00"),
@@ -91,13 +85,7 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should successfully process credit card payment with mock")
     void testProcessCreditCardPaymentSuccess() {
-        // Note: This test demonstrates the structure, but actual Stripe API calls
-        // would need to be mocked using PowerMock or similar for static methods
-        // In a real scenario, you would use Stripe's test mode or mock the Stripe client
-
-        // This test validates the input processing and exception handling structure
         assertDoesNotThrow(() -> {
-            // Validate input parameters
             BigDecimal amount = new BigDecimal("100.00");
             String currency = "usd";
             String idempotencyKey = "idempotency-key-123";
@@ -113,21 +101,15 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should convert amount to cents correctly")
     void testAmountConversionToCents() {
-        // Arrange
         BigDecimal amount = new BigDecimal("100.50");
         long expectedCents = 10050L;
-
-        // Act
         long actualCents = amount.multiply(BigDecimal.valueOf(100)).longValue();
-
-        // Assert
         assertEquals(expectedCents, actualCents);
     }
 
     @Test
     @DisplayName("Should handle various amount values correctly")
     void testVariousAmountConversions() {
-        // Test various amounts
         assertEquals(10000L, new BigDecimal("100.00").multiply(BigDecimal.valueOf(100)).longValue());
         assertEquals(12345L, new BigDecimal("123.45").multiply(BigDecimal.valueOf(100)).longValue());
         assertEquals(1L, new BigDecimal("0.01").multiply(BigDecimal.valueOf(100)).longValue());
@@ -137,7 +119,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should normalize currency to lowercase")
     void testCurrencyNormalization() {
-        // Test that currency should be lowercased
         String currency = "USD";
         String normalized = currency.toLowerCase();
         assertEquals("usd", normalized);
@@ -150,7 +131,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should validate bank transfer details structure")
     void testBankTransferDetailsValidation() {
-        // Validate that BankTransferDetails has all required fields
         assertNotNull(bankTransferDetails.getIban());
         assertNotNull(bankTransferDetails.getAccountHolder());
         assertNotNull(bankTransferDetails.getEmail());
@@ -163,7 +143,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should validate credit card details structure")
     void testCreditCardDetailsValidation() {
-        // Validate that CreditCardDetails has required payment method ID
         assertNotNull(creditCardDetails.getPaymentMethodId());
         assertTrue(creditCardDetails.getPaymentMethodId().startsWith("pm_"));
     }
@@ -171,10 +150,7 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should handle IBAN format validation")
     void testIbanFormatValidation() {
-        // Test various IBAN formats
         assertTrue(bankTransferDetails.getIban().matches("^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"));
-
-        // Test invalid IBAN
         BankTransferDetails invalidDetails = new BankTransferDetails();
         invalidDetails.setIban("INVALID");
         assertFalse(invalidDetails.getIban().matches("^[A-Z]{2}[0-9]{2}[A-Z0-9]+$"));
@@ -183,10 +159,8 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should handle email validation for bank transfers")
     void testEmailValidation() {
-        // Valid email
         assertTrue(bankTransferDetails.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$"));
 
-        // Test invalid email
         BankTransferDetails invalidDetails = new BankTransferDetails();
         invalidDetails.setEmail("invalid-email");
         assertFalse(invalidDetails.getEmail().matches("^[A-Za-z0-9+_.-]+@(.+)$"));
@@ -195,7 +169,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should process different payment method types")
     void testDifferentPaymentMethodTypes() {
-        // Test different Stripe payment method test tokens
         String[] testTokens = {
             "pm_card_visa",
             "pm_card_mastercard",
@@ -213,7 +186,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should handle large amounts correctly")
     void testLargeAmounts() {
-        // Test large amount conversion
         BigDecimal largeAmount = new BigDecimal("999999.99");
         long cents = largeAmount.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -224,7 +196,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should handle small amounts correctly")
     void testSmallAmounts() {
-        // Test small amount conversion
         BigDecimal smallAmount = new BigDecimal("0.01");
         long cents = smallAmount.multiply(BigDecimal.valueOf(100)).longValue();
 
@@ -235,7 +206,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should validate idempotency key is provided")
     void testIdempotencyKeyValidation() {
-        // Idempotency key should not be null or empty
         String idempotencyKey = "idempotency-key-123";
         assertNotNull(idempotencyKey);
         assertTrue(idempotencyKey.length() > 0);
@@ -244,7 +214,6 @@ class StripeServiceTest {
     @Test
     @DisplayName("Should handle multiple currencies")
     void testMultipleCurrencies() {
-        // Test various currency codes
         String[] currencies = {"usd", "eur", "gbp", "jpy", "cad"};
 
         for (String currency : currencies) {
