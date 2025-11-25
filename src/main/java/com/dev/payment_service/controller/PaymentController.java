@@ -2,12 +2,16 @@ package com.dev.payment_service.controller;
 
 import com.dev.payment_service.dto.PaymentInitiationRequest;
 import com.dev.payment_service.dto.PaymentInitiationResponse;
+import com.dev.payment_service.enums.PaymentStatus;
 import com.dev.payment_service.service.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 
 @RestController
@@ -32,6 +36,19 @@ public class PaymentController {
     public ResponseEntity<PaymentInitiationResponse> getPaymentById(@PathVariable Long id) {
         PaymentInitiationResponse response = paymentService.getPaymentById(id);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentInitiationResponse>> getAllPayments(
+            @RequestParam(required = false) PaymentStatus status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(required = false) BigDecimal minAmount,
+            @RequestParam(required = false) BigDecimal maxAmount) {
+
+        List<PaymentInitiationResponse> payments = paymentService.getAllPayments(
+                status, startDate, endDate, minAmount, maxAmount);
+        return ResponseEntity.ok(payments);
     }
 
 }

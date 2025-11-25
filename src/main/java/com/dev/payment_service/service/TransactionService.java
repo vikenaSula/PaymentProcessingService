@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,6 +32,10 @@ public class TransactionService {
         return transactionRepository.findById(id);
     }
 
+    public List<Transaction> findAll() {
+        return transactionRepository.findAll();
+    }
+
 
     @Transactional
     public Transaction createTransaction(Transaction transaction) {
@@ -48,7 +53,7 @@ public class TransactionService {
     @Transactional
     public Transaction updateTransactionStatus(Long transactionId, PaymentStatus newStatus, String modifiedBy) {
         Transaction transaction = transactionRepository.findById(transactionId)
-            .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
+                .orElseThrow(() -> new IllegalArgumentException("Transaction not found: " + transactionId));
 
         transaction.setStatus(newStatus);
         transaction.setUpdatedAt(Instant.now());

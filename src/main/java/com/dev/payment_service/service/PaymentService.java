@@ -15,7 +15,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,10 +75,96 @@ public class PaymentService {
         Transaction transaction = transactionService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found with id: " + id));
 
-        log.info("Retrieved payment: id={}, reference={}, status={}",
-                transaction.getId(), transaction.getTransactionReference(), transaction.getStatus());
-
         return mapResponse(transaction);
+    }
+
+    public List<PaymentInitiationResponse> getAllPayments(
+            PaymentStatus status,
+            String startDateStr,
+            String endDateStr,
+            BigDecimal minAmount,
+            BigDecimal maxAmount) {
+
+        // Parse date strings
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+
+        if (startDateStr != null && !startDateStr.trim().isEmpty()) {
+            try {
+                startDate = LocalDate.parse(startDateStr.trim());
+            } catch (Exception e) {
+                log.error("Invalid startDate format received: '{}'. Error: {}. Expected format: yyyy-MM-dd (e.g., 2025-11-24)",
+                        startDateStr, e.getMessage());
+                throw new IllegalArgumentException(
+                        String.format("Invalid startDate format: '%s'. Expected format: yyyy-MM-dd (e.g., 2025-11-24)", startDateStr));
+            }
+        }
+
+        if (endDateStr != null && !endDateStr.trim().isEmpty()) {
+            try {
+                endDate = LocalDate.parse(endDateStr.trim());
+            } catch (Exception e) {
+                log.error("Invalid endDate format received: '{}'. Error: {}. Expected format: yyyy-MM-dd (e.g., 2025-11-24)",
+                        endDateStr, e.getMessage());
+                throw new IllegalArgumentException(
+                        String.format("Invalid endDate format: '%s'. Expected format: yyyy-MM-dd (e.g., 2025-11-24)", endDateStr));
+            }
+        }
+
+        List<Transaction> transactions = transactionService.findAll();
+
+        List<Transaction> filteredTransactions = new ArrayList<>();
+
+        for (Transaction transaction : transactions) {
+            if (!matchesFilters(transaction, status, startDate, endDate, minAmount, maxAmount)) {
+                continue;
+            }
+            filteredTransactions.add(transaction);
+        }
+
+        List<PaymentInitiationResponse> responses = new ArrayList<>();
+        for (Transaction transaction : filteredTransactions) {
+            responses.add(mapResponse(transaction));
+        }
+
+        return responses;
+    }
+
+    private boolean matchesFilters(
+            Transaction transaction,
+            PaymentStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            BigDecimal minAmount,
+            BigDecimal maxAmount) {
+
+        if (status != null && transaction.getStatus() != status) {
+            return false;
+        }
+
+        if (startDate != null) {
+            Instant startInstant = startDate.atStartOfDay().toInstant(ZoneOffset.UTC);
+            if (transaction.getCreatedAt().isBefore(startInstant)) {
+                return false;
+            }
+        }
+
+        if (endDate != null) {
+            Instant endInstant = endDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+            if (transaction.getCreatedAt().isAfter(endInstant) ||
+                    transaction.getCreatedAt().equals(endInstant)) {
+                return false;
+            }
+        }
+        if (minAmount != null && transaction.getAmount().compareTo(minAmount) < 0) {
+            return false;
+        }
+
+        if (maxAmount != null && transaction.getAmount().compareTo(maxAmount) > 0) {
+            return false;
+        }
+
+        return true;
     }
 
     private void handleCardPayment(Transaction tx, PaymentInitiationRequest request, String idempotencyKey) {

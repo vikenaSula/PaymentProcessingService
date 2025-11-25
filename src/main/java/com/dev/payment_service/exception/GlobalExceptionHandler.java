@@ -18,9 +18,7 @@ import java.util.List;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /*
-     * Handle validation errors from @Valid annotation
-   */
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
