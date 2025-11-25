@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -23,6 +24,7 @@ public class PaymentController {
 
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<PaymentInitiationResponse> initiatePayment(
             @Valid @RequestBody PaymentInitiationRequest request,
             @RequestHeader(value = "Idempotency-Key") String idempotencyKey) {
@@ -33,12 +35,14 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
     public ResponseEntity<PaymentInitiationResponse> getPaymentById(@PathVariable Long id) {
         PaymentInitiationResponse response = paymentService.getPaymentById(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PaymentInitiationResponse>> getAllPayments(
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) String startDate,
