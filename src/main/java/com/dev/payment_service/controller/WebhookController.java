@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.net.Webhook;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/webhooks")
 @RequiredArgsConstructor
+@Tag(name = "Webhooks", description = "Webhook endpoints for payment provider callbacks")
 public class WebhookController {
 
     private static final Logger log = LoggerFactory.getLogger(WebhookController.class);
@@ -28,9 +34,21 @@ public class WebhookController {
     private String webhookSecret;
 
     @PostMapping("/payment")
+    @Operation(
+            summary = "Handle Stripe webhook events",
+            description = "Receives and processes webhook events from Stripe payment provider. This endpoint is called by Stripe to notify about payment status changes."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Webhook received and processed"),
+            @ApiResponse(responseCode = "400", description = "Invalid signature or payload")
+    })
     public ResponseEntity<String> handleStripeWebhook(
-            @RequestBody String payload,
-            @RequestHeader("Stripe-Signature") String sigHeader) {
+            @RequestBody
+            @Parameter(description = "Stripe webhook event payload", required = true)
+            String payload,
+            @RequestHeader("Stripe-Signature")
+            @Parameter(description = "Stripe signature for webhook verification", required = true)
+            String sigHeader) {
 
         log.info("Received Stripe webhook event");
 

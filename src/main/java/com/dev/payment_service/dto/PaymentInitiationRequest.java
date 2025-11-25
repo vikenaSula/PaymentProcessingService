@@ -1,6 +1,7 @@
 package com.dev.payment_service.dto;
 
 import com.dev.payment_service.enums.PaymentMethod;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
@@ -13,21 +14,26 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
+@Schema(description = "Payment initiation request")
 public class PaymentInitiationRequest {
 
     @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be positive")
+    @Schema(description = "Payment amount", example = "99.99", required = true)
     private BigDecimal amount;
 
     @NotBlank(message = "Currency is required")
     @Size(min = 3, max = 3, message = "Currency must be 3 characters")
+    @Schema(description = "Currency code (ISO 4217)", example = "USD", required = true)
     private String currency;
 
     @NotNull(message = "Payment method is required")
+    @Schema(description = "Payment method type", example = "CREDIT_CARD", required = true)
     private PaymentMethod paymentMethod;
 
     @Valid
     @NotNull(message = "Payment details are required")
+    @Schema(description = "Payment method specific details", required = true)
     private PaymentDetails details;
 
 }

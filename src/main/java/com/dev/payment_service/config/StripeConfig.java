@@ -8,10 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Stripe Payment Gateway Configuration
- * Simple configuration for educational purposes
- */
 @Configuration
 @Getter
 public class StripeConfig {

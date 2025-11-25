@@ -38,6 +38,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
 
+                        // OpenAPI / Swagger endpoints
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+
                         // Admin-only endpoints
                         .requestMatchers(HttpMethod.GET, "/api/v1/payments").hasRole("ADMIN")
 
