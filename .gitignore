@@ -34,7 +34,6 @@ logs/
 
 src/main/resources/application-local.properties
 
-# Local app properties (optional – uncomment if they contain secrets)
 # src/main/resources/application.properties
 # src/main/resources/application.yml
 
